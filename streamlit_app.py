@@ -8,6 +8,21 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from streamlit_lottie import st_lottie
 import json
 import time
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from utils import *
+import pickle
+colors_maciek = ['#1d2026', '#172554', '#1e40af', '#3b82f6', '#60a5fa', '#93c5fd']
+colors_ola = ['#1d2026', '#2e1065', '#7c3aed','#c084fc','#e9d5ff','#dcd0ff']
+
+with open('data/dane_ola.pkl', 'rb') as file:
+    data_ola = pickle.load(file)
+
+with open('data/dane_maciek.pkl', 'rb') as file:
+    data_maciek = pickle.load(file)
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STYLE_PATH = os.path.join(BASE_DIR, "style.css")
 
@@ -44,6 +59,29 @@ if selected == "Home":
     st.markdown('</div>', unsafe_allow_html=True)
 
   bottom_left, bottom_right = st.columns((3,2))
+
+  st.title("Music Activity Calendar")
+  col1, col2 = st.columns([3, 1])
+  with col2:
+      sel_person = st.selectbox("Choose user",[ "Maciek", "Ola"])
+      if sel_person == "Ola":
+          data = data_ola
+          colors = colors_ola
+      else:
+          data = data_maciek
+          colors = colors_maciek
+
+      activity = data.groupby("ts_date")['ms_played'].sum()
+      data = activity.reset_index() if isinstance(activity, pd.Series) else activity.copy()
+      data['ts_date'] = pd.to_datetime(data['ts_date'])
+      data['mins'] = (data['ms_played'] / 60000).round(0)
+      available_years = sorted(data['ts_date'].dt.year.unique(), reverse=True)
+      sel_year = st.selectbox("Year", available_years)
+      months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+      view_mode = st.selectbox("View", ["Full Year"] + months)
+
+  with col1:
+      st.plotly_chart(draw_chart(data, colors, sel_year, view_mode), use_container_width=True)
 
   with bottom_left:
     st.markdown('<div class="card">', unsafe_allow_html=True)

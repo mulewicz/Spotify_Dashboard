@@ -17,6 +17,8 @@ from plotly.subplots import make_subplots
 from utils import *
 import spotipy
 import pickle
+from utils2 import *
+
 colors_maciek = ['#1d2026', '#172554', '#1e40af', '#3b82f6', '#60a5fa', '#93c5fd']
 colors_ola = ['#1d2026', '#2e1065', '#7c3aed','#c084fc','#e9d5ff','#dcd0ff']
 colors_maciek_light = ['#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', "#008080", "#b2d8d8", "#005b96", "#92d2f9", "#344771"]*20
@@ -37,7 +39,7 @@ st.sidebar.title("choose data")
 with st.sidebar:
     selected = option_menu(
         menu_title="Navigation",
-        options=["Home", "Stats", "playlists on the map", "generate your own spotify wrapped", "Summary"],
+        options=["Home", "Shared", "playlists on the map", "generate your own spotify wrapped", "Summary"],
         styles = {"nav-link-selected":{"background-color": "#202035"} }
     )
 
@@ -215,7 +217,61 @@ if selected == "Home":
   else:
           st.warning("Nie udało się pobrać wystarczającej ilości tekstu.")
 
-if selected == "Stats":
+if selected == "Shared":
+
+  col1, col2 = st.columns(2)
+
+  with col2:
+
+    data_ola['ts_date'] = pd.to_datetime(data_ola['ts_date'])
+    data_maciek['ts_date'] = pd.to_datetime(data_maciek['ts_date'])
+    available_years = sorted(data_ola['ts_date'].dt.year.unique(), reverse=True)
+    year = st.selectbox("Year", available_years)
+
+  with col1:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    shared_songs = shared_tab(data_ola, data_maciek, ['master_metadata_album_artist_name', 'master_metadata_track_name'], year)
+    st.caption("nazwa")
+    for index, row in shared_songs.reset_index(drop=True).iterrows():
+        rank = index + 1
+        title = row['master_metadata_track_name']
+        artist = row['master_metadata_album_artist_name']
+        mins_a = row['minutes_a']
+        mins_b = row['minutes_b']
+
+        rank_color = "#fff"
+
+        st.markdown(f"""
+          <div style="
+              background-color: #11141d;
+              border-radius: 10px;
+              padding: 10px 15px;
+              margin-bottom: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+          ">
+              <div style="display: flex; align-items: center; gap: 15px;">
+                  <span style="font-size: 1.2rem; font-weight: bold; color: {rank_color}; width: 30px;">#{rank}</span>
+                  <div>
+                      <div style="color: white; font-weight: 600; font-size: 0.95rem;">{title}</div>
+                      <div style="color: #8f9bb3; font-size: 0.8rem;">{artist}</div>
+                  </div>
+              </div>
+              <div style="font-family: monospace; color: #ccc; font-size: 0.9rem; background: #262730; padding: 2px 8px; border-radius: 6px;">
+                  {mins_a}
+              </div>
+              <div style="font-family: monospace; color: #ccc; font-size: 0.9rem; background: #262730; padding: 2px 8px; border-radius: 6px;">
+                  {mins_b}
+              </div>
+          </div>
+          """, unsafe_allow_html=True)
+
+
+
+
+
   col1, col2, col3, col4 = st.columns(4)
 
   with col1:

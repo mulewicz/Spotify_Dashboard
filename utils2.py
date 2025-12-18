@@ -1,4 +1,22 @@
 import pandas as pd
+import streamlit as st
+import pickle
+import os
+
+colors_maciek = ['#1d2026', '#172554', '#1e40af', '#3b82f6', '#60a5fa', '#93c5fd']
+colors_ola = ['#1d2026', '#2e1065', '#7c3aed', '#c084fc', '#e9d5ff', '#dcd0ff']
+colors_maciek_light = ['#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', "#008080", "#b2d8d8", "#005b96", "#92d2f9",
+                       "#344771"] * 20
+colors_ola_light = ['#a78bfa', '#c084fc', '#e9d5ff', '#f3e8ff', "#9F2B68", "#D8BFD8", "#660066", "#800080",
+                    "#9f72ca"] * 20
+with open('data/dane_ola.pkl', 'rb') as file:
+    data_ola = pickle.load(file)
+
+with open('data/dane_maciek.pkl', 'rb') as file:
+    data_maciek = pickle.load(file)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STYLE_PATH = os.path.join(BASE_DIR, "style.css")
 
 def shared_tab(data_a, data_b, col, sel_year):
     df_a= data_a[data_a['ts_date'].dt.year == sel_year].copy()
@@ -24,5 +42,6 @@ def shared_tab(data_a, data_b, col, sel_year):
 
 dane_maciek = pd.read_pickle("data/dane_maciek.pkl")
 dane_ola = pd.read_pickle("data/dane_ola.pkl")
+
 
 

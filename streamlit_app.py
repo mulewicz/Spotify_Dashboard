@@ -32,7 +32,7 @@ with st.sidebar:
         styles = {"nav-link-selected":{"background-color": "#202035"} }
     )
 
-st.markdown('<div class="big-title">Spotify Dashboard Overview</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Spotify Dashboard Overview</div>', unsafe_allow_html=True)
 st.caption("This app was created to analyse trends present in our music taste")
 
 if selected == "Home":

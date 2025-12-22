@@ -20,42 +20,44 @@ import pickle
 from utils2 import *
 
 def home():
+    col1, col2, col3 = st.columns(3)
+    with col1:
+            sel_person = st.selectbox("Choose user", ["Maciek", "Ola"])
+            if sel_person == "Ola":
+                df = data_ola
+                colors = colors_ola
+                colors_light = colors_ola_light
+            else:
+                df = data_maciek
+                colors = colors_maciek
+                colors_light = colors_maciek_light
 
+    df['ts_date'] = pd.to_datetime(df['ts_date'])
+    data = df.copy()
+    activity = data.groupby("ts_date")['ms_played'].sum()
+    data = activity.reset_index() if isinstance(activity, pd.Series) else activity.copy()
+    data['ts_date'] = pd.to_datetime(data['ts_date'])
+    data['mins'] = (data['ms_played'] / 60000).round(0)
+    available_years = sorted(data['ts_date'].dt.year.unique(), reverse=True)
+    with col2:
+        sel_year = st.selectbox("Year", available_years)
+    with col3:
+        view_mode = st.selectbox("View", ["Full Year"] + months)
 
-    if True:
-      col_1, col_2= st.columns((2,3))
-      art1, art2 = st.columns([1, 1.5], gap="large")
-      st.markdown('<div class="card">', unsafe_allow_html=True)
-      st.markdown('<div class="big-title">Music Activity calendar</div>', unsafe_allow_html=True)
-      col1, col2 = st.columns([3, 1])
-      with col2:
-          sel_person = st.selectbox("Choose user",[ "Maciek", "Ola"])
-          if sel_person == "Ola":
-              df = data_ola
-              colors = colors_ola
-              colors_light = colors_ola_light
-          else:
-              df = data_maciek
-              colors = colors_maciek
-              colors_light = colors_maciek_light
-          df['ts_date'] = pd.to_datetime(df['ts_date'])
-          data = df.copy()
-          activity = data.groupby("ts_date")['ms_played'].sum()
-          data = activity.reset_index() if isinstance(activity, pd.Series) else activity.copy()
-          data['ts_date'] = pd.to_datetime(data['ts_date'])
-          data['mins'] = (data['ms_played'] / 60000).round(0)
-          available_years = sorted(data['ts_date'].dt.year.unique(), reverse=True)
-          sel_year = st.selectbox("Year", available_years)
-          months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-          view_mode = st.selectbox("View", ["Full Year"] + months)
+    col_1, col_2= st.columns((2,3))
+    art1, art2 = st.columns([1, 1.5], gap="large")
 
-      with col1:
-          st.plotly_chart(draw_chart(data, colors, sel_year, view_mode), use_container_width=True)
+    title = f"Music Activity Calendar of {sel_year}"
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
 
-      with col_1:
-          st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.plotly_chart(draw_chart(data, colors, sel_year, view_mode), use_container_width=True)
+
+    with col_1:
           top_artists_df, title = get_top_5_artists(df, sel_year, view_mode)
-          st.caption(title)
+          st.markdown('<div class="card">', unsafe_allow_html=True)
+          st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
+
           rank_color = colors[3]
           for idx, row in top_artists_df.reset_index(drop=True).iterrows():
               rank = idx + 1
@@ -80,11 +82,11 @@ def home():
 
 
 
-      with col_2:
-          st.markdown('<div class="card">', unsafe_allow_html=True)
-
+    with col_2:
           top_albums_df, title = get_top_8_albums(df, sel_year, view_mode)
-          st.caption(title)
+          st.markdown('<div class="card">', unsafe_allow_html=True)
+          st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
+
           cols = st.columns(4)
 
           for i, (idx, row) in enumerate(top_albums_df.iterrows()):
@@ -102,52 +104,55 @@ def home():
                         </div>
                         """, unsafe_allow_html=True)
 
-      bottom_left, bottom_right = st.columns((2,3))
-      with bottom_left:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+    bottom_left, bottom_right = st.columns((2,3))
+    with bottom_left:
         fig = chart_sum(data, sel_year, colors[3])
+        title = f"Minutes Listened per Month ({sel_year})"
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
+
         st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-      with bottom_right:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-
+    with bottom_right:
         top_songs, title = get_top_5_songs(df, sel_year, view_mode)
-        st.caption(title)
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
+
         for index, row in top_songs.reset_index(drop=True).iterrows():
-            rank = index + 1
-            title = row['master_metadata_track_name']
-            artist = row['master_metadata_album_artist_name']
-            plays = row['counts']
+                rank = index + 1
+                title = row['master_metadata_track_name']
+                artist = row['master_metadata_album_artist_name']
+                plays = row['counts']
 
-            rank_color = colors[3]
+                rank_color = colors[3]
 
-            st.markdown(f"""
-            <div style="
-                background-color: #11141d;
-                border-radius: 10px;
-                padding: 10px 15px;
-                margin-bottom: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            ">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <span style="font-size: 1.2rem; font-weight: bold; color: {rank_color}; width: 30px;">#{rank}</span>
-                    <div>
-                        <div style="color: white; font-weight: 600; font-size: 0.95rem;">{title}</div>
-                        <div style="color: #8f9bb3; font-size: 0.8rem;">{artist}</div>
+                st.markdown(f"""
+                <div style="
+                    background-color: #11141d;
+                    border-radius: 10px;
+                    padding: 10px 15px;
+                    margin-bottom: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                ">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span style="font-size: 1.2rem; font-weight: bold; color: {rank_color}; width: 30px;">#{rank}</span>
+                        <div>
+                            <div style="color: white; font-weight: 600; font-size: 0.95rem;">{title}</div>
+                            <div style="color: #8f9bb3; font-size: 0.8rem;">{artist}</div>
+                        </div>
+                    </div>
+                    <div style="font-family: monospace; color: {colors[3]}; font-size: 0.9rem; background: #262730; padding: 2px 8px; border-radius: 6px;">
+                        {plays}
                     </div>
                 </div>
-                <div style="font-family: monospace; color: #ccc; font-size: 0.9rem; background: #262730; padding: 2px 8px; border-radius: 6px;">
-                    {plays}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
-      met1, met2, met3, met4 = st.columns(4)
+    met1, met2, met3, met4 = st.columns(4)
 
-      with met1:
+    with met1:
           diff = get_max_in_the_day(df, sel_year) - get_max_in_the_day(df, sel_year-1)
           st.metric(
               label=f"Max hours in a day ({sel_year})",
@@ -155,7 +160,7 @@ def home():
               delta=f"{diff:+,.1f} h ({sel_year-1})"
           )
 
-      with met2:
+    with met2:
           diff = num_of_artists_listened(df, sel_year) - num_of_artists_listened(df, sel_year-1)
           st.metric(
               label=f"Number of artists listened ({sel_year})",
@@ -163,7 +168,7 @@ def home():
               delta=f"{diff:+,.1f} ({sel_year-1})"
           )
 
-      with met3:
+    with met3:
           diff = get_total_days(df, sel_year) - get_total_days(df, sel_year-1)
           st.metric(
               label="Total number of days played",
@@ -171,24 +176,42 @@ def home():
               delta=f"{diff:+,.1f} days ({sel_year-1})"
           )
 
-      with met4:
+    with met4:
           st.metric(
               label="tba",
               value="76,314",
               delta="-18.4% from previous week"
           )
 
-          df_top_data, _ = get_top_5_songs(df, sel_year, view_mode, num=10)
-          top_songs = list(
-              zip(df_top_data['master_metadata_album_artist_name'], df_top_data['master_metadata_track_name']))
-      st.markdown('<div class="card">', unsafe_allow_html=True)
-      if view_mode == "Full Year":
-          title = f"{sel_year}"
-      else:
-          title = f"{sel_year} ({view_mode})"
-      fig = get_lyrics_cloud_plotly(top_songs, colors_light, title)
+    LIMIT_PIOSENEK = 60
 
-      if fig:
-              st.plotly_chart(fig, use_container_width=True)
-      else:
-              st.warning("Nie udało się pobrać wystarczającej ilości tekstu.")
+    df_top_data, _ = get_top_5_songs(df, sel_year, view_mode, num=LIMIT_PIOSENEK)
+
+    top_songs_list = list(
+        zip(df_top_data['master_metadata_album_artist_name'], df_top_data['master_metadata_track_name']))
+
+    full_lyrics_data = download_lyrics_data(top_songs_list)
+
+    if full_lyrics_data:
+        available_langs = sorted(list(set([item['lang'] for item in full_lyrics_data])))
+        col1, col2 = st.columns(2)
+
+        with col1:
+            selected_lang = st.selectbox("Wybierz język tekstów:", available_langs)
+        with col2:
+            words_limit = st.slider("Liczba słów na wykresie:", min_value=10, max_value=200, value=50, step=10)
+        songs_in_lang = [item for item in full_lyrics_data if item['lang'] == selected_lang]
+        top_5_in_lang = songs_in_lang[:5]
+
+        st.caption(f"Analiza na podstawie {len(top_5_in_lang)} najpopularniejszych utworów w języku '{selected_lang}':")
+        st.caption(", ".join([f"{item['artist']} - {item['song']}" for item in top_5_in_lang]))
+        combined_text = " ".join([item['text'] for item in top_5_in_lang])
+
+        fig = generate_3d_cloud(combined_text, colors_light, words_limit)
+
+        if fig:
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("Za mało tekstu do wygenerowania chmury słów.")
+
+

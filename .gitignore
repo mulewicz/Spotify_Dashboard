@@ -169,4 +169,5 @@ cython_debug/
 
 # Inne dziwne
 .DS_Store
-.streamlit
+.streamlit/secrets.toml
+test2.ipynb

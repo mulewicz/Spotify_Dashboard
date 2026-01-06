@@ -20,6 +20,7 @@ import pickle
 from utils2 import *
 from home import *
 from shared import *
+from artists_on_the_map import *
 
 st.set_page_config(layout="wide")
 st.write("<style>" + open(STYLE_PATH).read() + "</style>", unsafe_allow_html=True)
@@ -40,3 +41,6 @@ if selected == "Home":
 
 if selected == "Shared":
     shared()
+
+if selected == "playlists on the map":
+    artists_on_the_map()

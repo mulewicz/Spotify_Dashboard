@@ -2,6 +2,8 @@ import pandas as pd
 import streamlit as st
 import pickle
 import os
+import plotly.express as px
+import toml
 
 colors_maciek = ['#1d2026', '#172554', '#1e40af', '#3b82f6', '#60a5fa', '#93c5fd']
 colors_ola = ['#1d2026', '#2e1065', '#7c3aed', '#c084fc', '#e9d5ff', '#dcd0ff']
@@ -14,6 +16,13 @@ with open('data/dane_ola.pkl', 'rb') as file:
 
 with open('data/dane_maciek.pkl', 'rb') as file:
     data_maciek = pickle.load(file)
+
+try:
+    secrets = toml.load(".streamlit/secrets.toml")
+    mapbox_token = secrets["MAPBOX_TOKEN"]
+except FileNotFoundError:
+    print("Nie znaleziono pliku secrets.toml! Upewnij się, że ścieżka jest poprawna.")
+    mapbox_token = ""
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STYLE_PATH = os.path.join(BASE_DIR, "style.css")
@@ -40,8 +49,87 @@ def shared_tab(data_a, data_b, col, sel_year):
     return res_tab.round(1)
 
 
-dane_maciek = pd.read_pickle("data/dane_maciek.pkl")
-dane_ola = pd.read_pickle("data/dane_ola.pkl")
+def plotly_scatter_map(df, map_token, lat, lon, continent_cords, color):
 
+    fig = px.scatter_mapbox(
+        df,
+        lat=lat,
+        lon=lon,
+        size_max=15,
+        hover_name="Artist",
+        hover_data ={
+            "lat" : False,
+            "lon" : False,
+            "Artist" : False
+        }
+    )
+    if continent_cords == dict(lat=35, lon=90):
+        zoomed = 2.5
+    else:
+        zoomed = 3
+
+    fig.update_layout(
+        mapbox_style="light",
+        hovermode="closest",
+        mapbox=dict(
+            accesstoken=map_token,
+            bearing=0,
+            center=continent_cords,
+            pitch=90,
+            zoom=zoomed,
+        ),
+        margin={"r": 15, "t": 15, "l": 15, "b": 15},
+        height=600
+    )
+
+    fig.update_traces(
+        marker=dict(color=color)
+    )
+
+    return fig
+
+def get_artist_loc(df):
+
+    unique_artists = df.drop_duplicates(subset=["master_metadata_album_artist_name"]).reset_index(drop=True)
+    location = pd.read_csv("artysci_lokalizacje.csv")
+    df_merged = unique_artists.merge(location, how="left", left_on="master_metadata_album_artist_name", right_on="Artist")
+    df_grouped = df_merged.groupby(["lat", "lon"])['Artist'].apply(lambda x: '<br>'.join(x)).reset_index()
+
+    return df_grouped
+
+
+def count_counties(df, continent):
+
+    location = pd.read_csv("artysci_lokalizacje.csv")
+    countries = pd.read_csv("data/Countries by continents.csv")
+    countries["Continent"] = countries["Continent"].replace("Oceania", "Australia/Oceania")
+
+    unique_artists = df.drop_duplicates(subset=["master_metadata_album_artist_name"]).reset_index(drop=True)
+    df_with_loc = unique_artists.merge(location, how="left", left_on="master_metadata_album_artist_name", right_on="Artist")
+    df_with_loc_country = df_with_loc.merge(countries, how="left", left_on="Location", right_on="Country")
+    df_continent = df_with_loc_country.loc[df_with_loc_country.Continent == continent, ["Artist", "Country", "Continent"]].reset_index(drop=True)
+    df_counted = df_continent.groupby("Country")["Artist"].count().to_frame().sort_values("Artist", ascending=False).reset_index()
+
+    return df_counted
+
+def plotly_bar_chart(df, color, bars_num):
+
+    df_for_fig = df.head(bars_num)
+
+    fig = px.bar(
+        df_for_fig,
+        x="Country",
+        y="Artist",
+    )
+    fig.update_layout(
+        title = "Number of Artists listened in Each Country",
+        yaxis=dict(
+            title="Number of Artists",
+        )
+    )
+    fig.update_traces(
+        marker=dict(color=color)
+    )
+    return fig
 
 

@@ -21,35 +21,93 @@ from utils2 import *
 
 def shared():
 
-    col1, = st.columns(1)
-    with col1:
+    col_year, col_legend = st.columns([1, 5])
+    with col_year:
 
         data_ola['ts_date'] = pd.to_datetime(data_ola['ts_date'])
         data_maciek['ts_date'] = pd.to_datetime(data_maciek['ts_date'])
         available_years = sorted(data_ola['ts_date'].dt.year.unique(), reverse=True)
         year = st.selectbox("Year", available_years)
 
-    tab_type = [['master_metadata_album_artist_name', 'master_metadata_track_name'],
-                ['master_metadata_album_artist_name'],
-                ['master_metadata_album_artist_name', 'master_metadata_album_album_name']]
+    with col_legend:
 
-    top_left, top_right = st.columns(2)
+        color_ola = colors_ola[3]
+        color_maciek = colors_maciek[3]
+
+        st.markdown(f"""
+            <div style=" display: flex; align-items: center; justify-content: flex-end; gap: 25px; height: 100%; padding-top: 28px; ">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 12px; height: 12px; background-color: {color_ola};"></div>
+                    <span style="font-weight: 600; color: #fff; font-size: 1rem;">Minutes played: Ola</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 12px; height: 12px; background-color: {color_maciek};"></div>
+                    <span style="font-weight: 600; color: #fff; font-size: 1rem;">Minutes played: Maciek</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    tab_type = [['master_metadata_album_artist_name', 'master_metadata_track_name'],
+                ['master_metadata_album_artist_name', 'master_metadata_album_album_name'],
+                ['master_metadata_album_artist_name']]
+
+    shared_artists = shared_tab(data_ola, data_maciek, tab_type[2], year)
+    title = f"Top shared artists of {year}"
     st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
+
+    cols = st.columns(5)
+
+    for i, (idx, row) in enumerate(shared_artists.iterrows()):
+
+        artist_name = row['master_metadata_album_artist_name']
+        cover_url, _ = get_artist_image_url(artist_name)
+        if not cover_url: cover_url = "https://via.placeholder.com/150"
+
+        with cols[i % 5]:
+
+            mins_a = row['minutes_a']
+            mins_b = row['minutes_b']
+            color_ola = colors_ola[3]
+            color_maciek = colors_maciek[3]
+
+            st.markdown(f"""
+              <div class="album-grid-item">
+                  <img src="{cover_url}" class="album-cover">
+                  <div class="album-title-text" title="{artist_name}">{artist_name}</div>
+                  <div style="display: flex; gap: 10px; justify-content: center;">
+                      <div style="font-family: monospace; color: {color_ola}; font-size: 0.9rem; background: #262730; padding: 2px 8px; border-radius: 6px;">
+                          {mins_a}
+                      </div>
+                      <div style="font-family: monospace; color: {color_maciek}; font-size: 0.9rem; background: #262730; padding: 2px 8px; border-radius: 6px;">
+                          {mins_b}
+                      </div>
+                  </div>
+              </div>
+              """, unsafe_allow_html=True)
+
+    st.markdown('<div style="height: 8px;"></div>', unsafe_allow_html=True)
     bottom_left, bottom_right = st.columns(2)
 
-    for i in range(3):
+    for i in range(2):
 
-        shared_songs = shared_tab(data_ola, data_maciek, tab_type[i], year)
+        shared_df = shared_tab(data_ola, data_maciek, tab_type[i], year)
 
-        for index, row in shared_songs.reset_index(drop=True).iterrows():
+        if i == 0:
+            current_col = bottom_left
+            title = f"Top shared songs of {year}"
+        else:
+            current_col = bottom_right
+            title = f"Top shared albums of {year}"
+
+        with current_col:
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
+
+        for index, row in shared_df.reset_index(drop=True).iterrows():
             rank = index + 1
 
-            if i == 1:
-                if index < 5:
-                    current_col = top_left
-                else:
-                    current_col = top_right
-            elif i == 0:
+            if i == 0:
                 current_col = bottom_left
             else:
                 current_col = bottom_right
@@ -100,32 +158,3 @@ def shared():
                   </div>
                   """, unsafe_allow_html=True)
 
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        st.metric(
-            label="tba",
-            value="975,124",
-            delta="+42.8% "
-        )
-
-    with col2:
-        st.metric(
-            label="tba",
-            value="296,241",
-            delta="+26.3% "
-        )
-
-    with col3:
-        st.metric(
-            label="tba",
-            value="121,908",
-            delta="+8.1%"
-        )
-
-    with col4:
-        st.metric(
-            label="tba",
-            value="76,314",
-            delta="-18.4% from previous week"
-        )

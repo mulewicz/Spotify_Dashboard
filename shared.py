@@ -86,6 +86,13 @@ def shared():
               </div>
               """, unsafe_allow_html=True)
 
+    render_shared_artist_timeseries(
+        shared_artists=shared_artists,
+        year=year,
+        data_ola=data_ola,
+        data_maciek=data_maciek,
+        freq="D")
+
     st.markdown('<div style="height: 8px;"></div>', unsafe_allow_html=True)
     bottom_left, bottom_right = st.columns(2)
 

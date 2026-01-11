@@ -29,12 +29,12 @@ st.sidebar.title("choose data")
 with st.sidebar:
     selected = option_menu(
         menu_title="Navigation",
-        options=["Home", "Shared", "playlists on the map", "generate your own spotify wrapped", "Summary"],
+        options=["Home", "Shared", "Artists on the Map", "Wrapped"],
         styles = {"nav-link-selected":{"background-color": "#202035"} }
     )
 
 st.markdown('<div class="main-title">Spotify Dashboard Overview</div>', unsafe_allow_html=True)
-st.caption("This app was created to analyse trends present in our music taste")
+st.caption("This app was created to analyse trends present in our music tastes")
 
 if selected == "Home":
     home()
@@ -42,5 +42,5 @@ if selected == "Home":
 if selected == "Shared":
     shared()
 
-if selected == "playlists on the map":
+if selected == "Artists on the Map":
     artists_on_the_map()

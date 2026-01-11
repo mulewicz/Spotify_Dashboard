@@ -11,6 +11,7 @@ colors_maciek_light = ['#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', "#008080", "#
                        "#344771"] * 20
 colors_ola_light = ['#a78bfa', '#c084fc', '#e9d5ff', '#f3e8ff', "#9F2B68", "#D8BFD8", "#660066", "#800080",
                     "#9f72ca"] * 20
+
 with open('data/dane_ola.pkl', 'rb') as file:
     data_ola = pickle.load(file)
 
@@ -88,14 +89,35 @@ def plotly_scatter_map(df, map_token, lat, lon, continent_cords, color):
 
     return fig
 
-def get_artist_loc(df):
+def get_artist_loc(df, aggregate=True):
+    unique_artists = df.drop_duplicates(
+        subset=["master_metadata_album_artist_name"]
+    ).reset_index(drop=True)
 
-    unique_artists = df.drop_duplicates(subset=["master_metadata_album_artist_name"]).reset_index(drop=True)
     location = pd.read_csv("artysci_lokalizacje.csv")
-    df_merged = unique_artists.merge(location, how="left", left_on="master_metadata_album_artist_name", right_on="Artist")
-    df_grouped = df_merged.groupby(["lat", "lon"])['Artist'].apply(lambda x: '<br>'.join(x)).reset_index()
+    df_merged = unique_artists.merge(
+        location,
+        how="left",
+        left_on="master_metadata_album_artist_name",
+        right_on="Artist"
+    )
 
-    return df_grouped
+    if 'Location' in df_merged.columns:
+        df_merged['Location'] = df_merged['Location'].fillna('Unknown')
+
+    if aggregate:
+        if 'Location' in df_merged.columns:
+            df_grouped = df_merged.groupby(
+                ["lat", "lon", "Location"]
+            )['Artist'].apply(lambda x: '<br>'.join(x)).reset_index()
+        else:
+            df_grouped = df_merged.groupby(
+                ["lat", "lon"]
+            )['Artist'].apply(lambda x: '<br>'.join(x)).reset_index()
+            df_grouped['Location'] = 'Unknown'
+        return df_grouped
+
+    return df_merged
 
 
 def count_counties(df, continent):
@@ -131,5 +153,3 @@ def plotly_bar_chart(df, color, bars_num):
         marker=dict(color=color)
     )
     return fig
-
-

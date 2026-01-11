@@ -1,6 +1,10 @@
 # the code for all plotly figures can be found here
 from typing import Any
-
+import pylast
+API_KEY = "5c51f97d7fb28cc1cd24b9bfba88054a"
+API_SECRET = "c17fb9f955fff5a4d4846e3e36931c59"
+from collections import Counter
+import time
 import numpy as np
 import plotly.graph_objects as go
 import plotly
@@ -12,11 +16,117 @@ from wordcloud import WordCloud, STOPWORDS
 from langdetect import detect, LangDetectException
 from collections import Counter
 import spotipy
+import pylast
+from collections import Counter
+import time
 from spotipy.oauth2 import SpotifyClientCredentials
 import random
+import plotly.express as px
+from utils2 import *
+import matplotlib.pyplot as plt
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 GENIUS_ACCESS_TOKEN = "3O6Gergq8PJj06gtdB2sfrFwPdEMCgZzaN1rdjumu8Bwu8GVHZsYYgMzBsxUAxeF"
 genius = lyricsgenius.Genius(GENIUS_ACCESS_TOKEN)
+
+def get_artist_timeseries(df, artist_name, year, freq="D"):
+    df_year = df[df['ts_date'].dt.year == year].copy()
+    df_artist = df_year[df_year['master_metadata_album_artist_name'] == artist_name].copy()
+    if df_artist.empty:
+        return pd.DataFrame(columns=["date", "minutes"])
+
+    df_artist = df_artist.set_index('ts_date').resample(freq)['ms_played'].sum().reset_index()
+
+    df_artist['minutes'] = df_artist['ms_played'] / 60000
+    df_artist['date'] = df_artist['ts_date'].dt.date
+
+    return df_artist[['date', 'minutes']]
+
+def render_shared_artist_timeseries(shared_artists, year, data_ola, data_maciek, freq="D"):
+    if shared_artists.empty:
+        return
+
+    st.markdown('<div style="height: 16px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown(
+        f"""<div class="big-title">Listening over time in {year}</div>""",
+        unsafe_allow_html=True
+    )
+
+    col_artist, col_who = st.columns([3, 2])
+
+    with col_artist:
+        selected_artist = st.selectbox(
+            "Choose artist from your shared top:",
+            shared_artists['master_metadata_album_artist_name'].tolist(),
+            key=f"shared_artist_select_{year}"
+        )
+
+    with col_who:
+        st.write("Whose listening?")
+        who_cols = st.columns(2)
+        with who_cols[0]:
+            show_ola = st.checkbox("Ola", value=True, key=f"show_ola_{year}")
+        with who_cols[1]:
+            show_maciek = st.checkbox("Maciek", value=True, key=f"show_maciek_{year}")
+
+    ts_ola = get_artist_timeseries(data_ola, selected_artist, year, freq=freq)
+    ts_maciek = get_artist_timeseries(data_maciek, selected_artist, year, freq=freq)
+
+    selected_any = show_ola or show_maciek
+
+    if not selected_any:
+        st.info("Zaznacz przynajmniej jedną osobę, żeby zobaczyć wykres.")
+        return
+
+    if (show_ola and ts_ola.empty) and (show_maciek and ts_maciek.empty):
+        st.info("Brak danych o słuchaniu tego artysty w wybranym roku.")
+        return
+
+    fig = go.Figure()
+
+    if show_ola and not ts_ola.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=ts_ola['date'],
+                y=ts_ola['minutes'],
+                mode="lines+markers",
+                name="Ola",
+                line=dict(color=colors_ola[3])
+            )
+        )
+
+    if show_maciek and not ts_maciek.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=ts_maciek['date'],
+                y=ts_maciek['minutes'],
+                mode="lines+markers",
+                name="Maciek",
+                line=dict(color=colors_maciek[3])
+            )
+        )
+
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Minutes played",
+        margin={"l": 40, "r": 20, "t": 20, "b": 40},
+        hovermode="x unified",
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+def artist_in_the_year(data, artist, year):
+    pass
+
+def get_available_years(df):
+    df['ts_date'] = pd.to_datetime(df['ts_date'])
+    data = df.copy()
+    activity = data.groupby("ts_date")['ms_played'].sum()
+    data = activity.reset_index() if isinstance(activity, pd.Series) else activity.copy()
+    data['ts_date'] = pd.to_datetime(data['ts_date'])
+    data['mins'] = (data['ms_played'] / 60000).round(0)
+    available_years = sorted(data['ts_date'].dt.year.unique(), reverse=True)
+    return available_years
 
 def get_lang(lyrics):
         try:
@@ -27,16 +137,11 @@ def get_lang(lyrics):
 
 @st.cache_data(show_spinner=False)
 def download_lyrics_data(artist_song_pairs):
-    """
-    Pobiera teksty dla listy piosenek i wykrywa ich język.
-    Zwraca listę słowników: [{'artist':, 'song':, 'text':, 'lang':}]
-    """
     genius.verbose = False
     genius.remove_section_headers = True
 
     lyrics_data = []
 
-    # Tworzymy pasek postępu
     progress_bar = st.progress(0)
     status_text = st.empty()
 
@@ -56,8 +161,7 @@ def download_lyrics_data(artist_song_pairs):
                     "lang": lang_detected
                 })
         except Exception as e:
-            # Możesz odkomentować print, żeby widzieć błędy w konsoli
-            # print(f"Error fetching {song}: {e}")
+
             pass
 
         progress_bar.progress((i + 1) / total)
@@ -158,14 +262,11 @@ def get_artist_image_url(artist_name: str) -> tuple[None, None] | tuple[Any | No
     spotify_url = artist["external_urls"]["spotify"]
     return image_url, spotify_url
 
-def get_the_genre(track_url):
-    sp = spotipy.Spotify(
-        auth_manager=SpotifyClientCredentials(
-            client_id=st.secrets["SPOTIPY_CLIENT_ID"],
-            client_secret=st.secrets["SPOTIPY_CLIENT_SECRET"],
-        )
-    )
-    track_info = sp.track(track_url)
+def get_the_genre(song, artist):
+    network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET)
+    track = network.get_track(artist, song)
+    top_tags = track.get_top_tags()
+    return top_tags[:5]
 
 def get_total_days(data, year):
     if 'mins' not in data.columns:
@@ -271,8 +372,6 @@ def chart_sum(data, sel_year, color):
     fig.update_xaxes(gridcolor='#333', tickangle=-45)
 
     return fig
-
-
 
 def draw_chart(data, colors, sel_year, view_mode):
     df_plot = group_by_month(data, sel_year)

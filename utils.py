@@ -172,70 +172,41 @@ def download_lyrics_data(artist_song_pairs):
     return lyrics_data
 
 
-def generate_3d_cloud(text_content, colors, max_count):
+def generate_2d_cloud(text_content, colors, max_count):
     if not text_content:
         return None
 
     my_stopwords = set(STOPWORDS)
-    my_stopwords.update(['feat', 'ft', 'verse', 'chorus', 'intro', 'outro', 'yeah', 'oh', 'la', 'na', 'ooh'])
+    my_stopwords.update([
+        'feat', 'ft', 'verse', 'chorus', 'intro', 'outro',
+        'yeah', 'oh', 'la', 'na', 'ooh'
+    ])
+
+    def random_color_func(word, font_size, position, orientation,
+                          random_state=None, **kwargs):
+        return random.choice(colors)
 
     wc = WordCloud(
-        width=1000,
-        height=800,
+        width=1200,
+        height=600,
         max_words=max_count,
         stopwords=my_stopwords,
-        background_color='black'
+        background_color=None,
+        mode="RGBA",
+        collocations=False,
+        prefer_horizontal=1.0,
+        color_func=random_color_func
     ).generate(text_content)
 
-    words = []
-    x_pos = []
-    y_pos = []
-    sizes = []
+    fig = plt.figure(figsize=(12, 6), dpi=100)
+    fig.patch.set_alpha(0.0)
 
-    for item in wc.layout_:
-        words.append(item[0][0])
-        sizes.append(item[1])
-        x_pos.append(item[2][1])
-        y_pos.append(item[2][0] * -1)
+    plt.imshow(wc, interpolation='bilinear')
+    plt.axis("off")
 
-    z_pos = [random.randint(-400, 400) for _ in words]
-    word_colors = [random.choice(colors) for _ in words] if colors else ['white'] * len(words)
-
-    fig = go.Figure(go.Scatter3d(
-        x=x_pos,
-        y=y_pos,
-        z=z_pos,
-        mode='text',
-        text=words,
-        hoverinfo='text',
-        hovertext=[f"Słowo: {w}<br>Rozmiar: {s:.0f}" for w, s in zip(words, sizes)],
-        textfont=dict(
-            size=sizes,
-            color=word_colors,
-            family="Arial"
-        )
-    ))
-
-    axis_layout = dict(
-        showgrid=False,
-        showticklabels=False,
-        zeroline=False,
-        title='',
-        showbackground=False,
-        visible=False
-    )
-
-    fig.update_layout(
-        scene=dict(
-            xaxis=axis_layout,
-            yaxis=axis_layout,
-            zaxis=axis_layout,
-            bgcolor='rgba(0,0,0,0)'
-        ),
-        paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=0, r=0, t=0, b=0),
-        hovermode='closest'
-    )
+    plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    plt.margins(0, 0)
+    plt.gca().set_position([0, 0, 1, 1])
 
     return fig
 

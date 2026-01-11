@@ -150,38 +150,6 @@ def home():
                 </div>
                 """, unsafe_allow_html=True)
 
-    met1, met2, met3, met4 = st.columns(4)
-
-    with met1:
-          diff = get_max_in_the_day(df, sel_year) - get_max_in_the_day(df, sel_year-1)
-          st.metric(
-              label=f"Max hours in a day ({sel_year})",
-              value=f"{get_max_in_the_day(df, sel_year):.1f}",
-              delta=f"{diff:+,.1f} h ({sel_year-1})"
-          )
-
-    with met2:
-          diff = num_of_artists_listened(df, sel_year) - num_of_artists_listened(df, sel_year-1)
-          st.metric(
-              label=f"Number of artists listened ({sel_year})",
-              value=f"{num_of_artists_listened(df, sel_year):.0f}",
-              delta=f"{diff:+,.1f} ({sel_year-1})"
-          )
-
-    with met3:
-          diff = get_total_days(df, sel_year) - get_total_days(df, sel_year-1)
-          st.metric(
-              label="Total number of days played",
-              value=f"{get_total_days(df, sel_year):.1f}",
-              delta=f"{diff:+,.1f} days ({sel_year-1})"
-          )
-
-    with met4:
-          st.metric(
-              label="tba",
-              value="76,314",
-              delta="-18.4% from previous week"
-          )
 
     LIMIT_PIOSENEK = 60
 
@@ -197,21 +165,18 @@ def home():
         col1, col2 = st.columns(2)
 
         with col1:
-            selected_lang = st.selectbox("Wybierz język tekstów:", available_langs)
+            selected_lang = st.selectbox("Choose language:", available_langs)
         with col2:
-            words_limit = st.slider("Liczba słów na wykresie:", min_value=10, max_value=200, value=50, step=10)
+            words_limit = st.slider("Choose number of Words:", min_value=10, max_value=200, value=50, step=10)
         songs_in_lang = [item for item in full_lyrics_data if item['lang'] == selected_lang]
         top_5_in_lang = songs_in_lang[:5]
 
-        st.caption(f"Analiza na podstawie {len(top_5_in_lang)} najpopularniejszych utworów w języku '{selected_lang}':")
+        st.caption(f"Based on {len(top_5_in_lang)} most popular '{selected_lang}' artists:")
         st.caption(", ".join([f"{item['artist']} - {item['song']}" for item in top_5_in_lang]))
         combined_text = " ".join([item['text'] for item in top_5_in_lang])
 
-        fig = generate_3d_cloud(combined_text, colors_light, words_limit)
-
+        fig = generate_2d_cloud(combined_text, colors, words_limit)
         if fig:
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("Za mało tekstu do wygenerowania chmury słów.")
+            st.pyplot(fig)
 
 

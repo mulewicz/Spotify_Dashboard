@@ -21,6 +21,7 @@ from utils2 import *
 from home import *
 from shared import *
 from artists_on_the_map import *
+from wrapped import *
 
 st.set_page_config(layout="wide")
 st.write("<style>" + open(STYLE_PATH).read() + "</style>", unsafe_allow_html=True)
@@ -44,3 +45,6 @@ if selected == "Shared":
 
 if selected == "Artists on the Map":
     artists_on_the_map()
+
+if selected == "Wrapped":
+    wrapped()

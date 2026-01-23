@@ -26,7 +26,7 @@ from wrapped import *
 st.set_page_config(layout="wide")
 st.write("<style>" + open(STYLE_PATH).read() + "</style>", unsafe_allow_html=True)
 
-st.sidebar.title("choose data")
+st.sidebar.title("Analysis Type")
 with st.sidebar:
     selected = option_menu(
         menu_title="Navigation",

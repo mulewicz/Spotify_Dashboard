@@ -21,8 +21,18 @@ from utils2 import *
 
 
 def artists_on_the_map():
+    st.markdown(
+        """
+        <div style="background-color: rgba(128, 128, 128, 0.1); padding: 20px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <strong>ARTISTS ON THE MAP:</strong> Explore the global footprint of our music taste. 
+            You can use the interactive map to discover where our favorite artists originate from and filter by continent and user, analyze the top countries contributions of each continent. 
+            Later on choose specific countries to see local popularity trends and top artists from that region.
+        </div>
+        """, unsafe_allow_html=True
+    )
+    st.write(" ")
+
     title = "Location of listened Artists"
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
@@ -98,7 +108,6 @@ def artists_on_the_map():
     fig_bar.update_layout(plot_bgcolor='rgba(0,0,0,0)', font=dict(color='white'))
     st.plotly_chart(fig_bar, use_container_width=True)
 
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown(f'<div class="big-title">Closer look into the Countries in {sel_continent}</div>', unsafe_allow_html=True)
 
     col_1, col_2 = st.columns(2)
@@ -137,7 +146,6 @@ def artists_on_the_map():
     col_trend, col_top_art = st.columns((1, 1))
 
     with col_top_art:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown(f'<div class="big-title">Top Artists of {sel_year} from {sel_country}</div>',
                     unsafe_allow_html=True)
 
@@ -158,7 +166,6 @@ def artists_on_the_map():
             st.info("No data available.")
 
     with col_trend:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown(f'<div class="big-title">Popularity Trend for Artists from {sel_country}</div>',
                     unsafe_allow_html=True)
         if not country_history.empty:

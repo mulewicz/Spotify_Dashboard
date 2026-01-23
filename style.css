@@ -13,6 +13,7 @@ body {
 .big-title {
   font-size: 22px;
   font-weight: 700;
+  padding: 18px 20px;
 }
 .card {
   background: #111017;
@@ -22,11 +23,10 @@ body {
 }
 
 .card-title {
-    font-size: 1rem;
+    font-size: 22px;
     font-weight: 700;
     color: #fff;
     margin-bottom: 10px;
-    font-family: 'Lucida Grande', serif;
 }
 
 .metric-label {

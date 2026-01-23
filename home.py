@@ -20,6 +20,17 @@ import pickle
 from utils2 import *
 
 def home():
+    st.markdown(
+        """
+        <div style="background-color: rgba(128, 128, 128, 0.1); padding: 20px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <strong>HOME:</strong> This page was created to work as a basic analysis tool. 
+            You can choose the user, year and the view (filter on one specific month or full year) which are applied for the WHOLE PAGE. 
+            Scroll down to discover our top artists, albums, songs and time spent on the app. 
+            You can also learn our listening habits (the minutes listened per day throughout the month/year) and top words of our favourite songs.
+        </div>
+        """, unsafe_allow_html=True
+    )
+    st.write(" ")
     col1, col2, col3 = st.columns(3)
     with col1:
             sel_person = st.selectbox("Choose user", ["Maciek", "Ola"])
@@ -47,15 +58,13 @@ def home():
     col_1, col_2= st.columns((2,3))
     art1, art2 = st.columns([1, 1.5], gap="large")
 
-    title = f"Music Activity Calendar of {sel_year}"
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    title = f"Music Activity Calendar of {sel_year} ({sel_person})"
     st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
 
     st.plotly_chart(draw_chart(data, colors, sel_year, view_mode), use_container_width=True)
 
     with col_1:
           top_artists_df, title = get_top_5_artists(df, sel_year, view_mode)
-          st.markdown('<div class="card">', unsafe_allow_html=True)
           st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
 
           rank_color = colors[3]
@@ -84,7 +93,6 @@ def home():
 
     with col_2:
           top_albums_df, title = get_top_8_albums(df, sel_year, view_mode)
-          st.markdown('<div class="card">', unsafe_allow_html=True)
           st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
 
           cols = st.columns(4)
@@ -107,16 +115,13 @@ def home():
     bottom_left, bottom_right = st.columns((2,3))
     with bottom_left:
         fig = chart_sum(data, sel_year, colors[3])
-        title = f"Minutes Listened per Month ({sel_year})"
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+        title = f"Minutes Listened per Month in {sel_year}"
         st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
 
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
     with bottom_right:
         top_songs, title = get_top_5_songs(df, sel_year, view_mode)
-        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
 
         for index, row in top_songs.reset_index(drop=True).iterrows():
@@ -150,6 +155,7 @@ def home():
                 </div>
                 """, unsafe_allow_html=True)
 
+    st.markdown(f"""<div class="big-title">Word Cloud for top songs by language in {sel_year} ({sel_person})</div>""", unsafe_allow_html=True)
 
     LIMIT_PIOSENEK = 60
 

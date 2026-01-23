@@ -12,6 +12,7 @@ from plotly.subplots import make_subplots
 import pandas as pd
 import streamlit as st
 import lyricsgenius
+from stop_words import get_stop_words
 from wordcloud import WordCloud, STOPWORDS
 from langdetect import detect, LangDetectException
 from collections import Counter
@@ -82,16 +83,25 @@ def render_shared_artist_timeseries(shared_artists, year, data_ola, data_maciek,
         st.info("Brak danych o słuchaniu tego artysty w wybranym roku.")
         return
 
+    if not ts_ola.empty:
+        ts_ola['minutes_smooth'] = ts_ola['minutes'].rolling(window=7, min_periods=1).mean()
+
+    if not ts_maciek.empty:
+        ts_maciek['minutes_smooth'] = ts_maciek['minutes'].rolling(window=7, min_periods=1).mean()
     fig = go.Figure()
 
     if show_ola and not ts_ola.empty:
         fig.add_trace(
             go.Scatter(
                 x=ts_ola['date'],
-                y=ts_ola['minutes'],
-                mode="lines+markers",
-                name="Ola",
-                line=dict(color=colors_ola[3])
+                y=ts_ola['minutes_smooth'],
+                mode="lines",
+                name="Ola (7-day Trend)",
+                line=dict(
+                    color=colors_ola[3],
+                    width=3,
+                    shape='spline'
+                )
             )
         )
 
@@ -99,22 +109,25 @@ def render_shared_artist_timeseries(shared_artists, year, data_ola, data_maciek,
         fig.add_trace(
             go.Scatter(
                 x=ts_maciek['date'],
-                y=ts_maciek['minutes'],
-                mode="lines+markers",
-                name="Maciek",
-                line=dict(color=colors_maciek[3])
+                y=ts_maciek['minutes_smooth'],
+                mode="lines",
+                name="Maciek (7-day Trend)",
+                line=dict(
+                    color=colors_maciek[3],
+                    width=3,
+                    shape='spline'
+                )
             )
         )
 
     fig.update_layout(
         xaxis_title="Date",
-        yaxis_title="Minutes played",
+        yaxis_title="Minutes played (7-day Avg)",  # Warto zaznaczyć, że to średnia
         margin={"l": 40, "r": 20, "t": 20, "b": 40},
         hovermode="x unified",
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
 def artist_in_the_year(data, artist, year):
     pass
 
@@ -177,6 +190,27 @@ def generate_2d_cloud(text_content, colors, max_count):
         return None
 
     my_stopwords = set(STOPWORDS)
+    my_stopwords.update(get_stop_words('polish'))
+    my_stopwords.update(get_stop_words('spanish'))
+    my_stopwords.update(get_stop_words('german'))
+    my_stopwords.update(get_stop_words('french'))
+    my_stopwords.update(get_stop_words('dutch'))
+    my_stopwords.update(get_stop_words('italian'))
+    my_stopwords.update(get_stop_words('korean'))
+    my_stopwords.update(get_stop_words('russian'))
+    my_stopwords.update(get_stop_words('swedish'))
+
+    polish_stopwords = [
+        'i', 'w', 'z', 'na', 'do', 'że', 'się', 'o', 'a', 'to', 'jak', 'ja',
+        'ty', 'on', 'ona', 'my', 'wy', 'oni', 'one', 'mnie', 'tobie', 'ciebie',
+        'nam', 'wam', 'im', 'jego', 'jej', 'ich', 'tym', 'tam', 'tu', 'ten',
+        'ta', 'to', 'te', 'tę', 'będę', 'będzie', 'jest', 'są', 'był', 'była',
+        'było', 'byli', 'byle', 'nie', 'tak', 'czy', 'ale', 'bo', 'co', 'gdy',
+        'lub', 'albo', 'więc', 'dla', 'po', 'nad', 'pod', 'przez', 'przy', 'od',
+        'już', 'też', 'tylko', 'jeszcze', 'bardzo', 'może', 'kiedy', 'gdzie'
+    ]
+    my_stopwords.update(polish_stopwords)
+
     my_stopwords.update([
         'feat', 'ft', 'verse', 'chorus', 'intro', 'outro',
         'yeah', 'oh', 'la', 'na', 'ooh'

@@ -20,6 +20,18 @@ import pickle
 from utils2 import *
 
 def shared():
+    st.markdown(
+        """
+        <div style="background-color: rgba(128, 128, 128, 0.1); padding: 20px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <strong>SHARED:</strong> Welcome to the shared music dashboard which analysis the similarities and differences between us. 
+            Use the filters below to control the view for the WHOLE PAGE. 
+            Scroll down to discover <strong>Shared Section</strong>, 
+            where <span style="color: #c084fc;"><strong>Pink (Ola)</strong></span> and <span style="color: #3b82f6;"><strong>Blue (Maciek)</strong></span> 
+            tags show who listened more. On this page you can explore the listening trends over time, top shared artists, and the albums that defined our year.
+        </div>
+        """, unsafe_allow_html=True
+    )
+    st.write(" ")
 
     col_year, col_legend = st.columns([1, 5])
     with col_year:
@@ -53,7 +65,6 @@ def shared():
 
     shared_artists = shared_tab(data_ola, data_maciek, tab_type[2], year)
     title = f"Top shared artists of {year}"
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
 
     cols = st.columns(5)
@@ -108,7 +119,6 @@ def shared():
             title = f"Top shared albums of {year}"
 
         with current_col:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
             st.markdown(f"""<div class="big-title">{title}</div>""", unsafe_allow_html=True)
 
         for index, row in shared_df.reset_index(drop=True).iterrows():

@@ -120,7 +120,7 @@ def get_artist_loc(df, aggregate=True):
     return df_merged
 
 
-def count_counties(df, continent):
+def count_counties(df, continent = None):
 
     location = pd.read_csv("artysci_lokalizacje.csv")
     countries = pd.read_csv("data/Countries by continents.csv")
@@ -129,8 +129,9 @@ def count_counties(df, continent):
     unique_artists = df.drop_duplicates(subset=["master_metadata_album_artist_name"]).reset_index(drop=True)
     df_with_loc = unique_artists.merge(location, how="left", left_on="master_metadata_album_artist_name", right_on="Artist")
     df_with_loc_country = df_with_loc.merge(countries, how="left", left_on="Location", right_on="Country")
-    df_continent = df_with_loc_country.loc[df_with_loc_country.Continent == continent, ["Artist", "Country", "Continent"]].reset_index(drop=True)
-    df_counted = df_continent.groupby("Country")["Artist"].count().to_frame().sort_values("Artist", ascending=False).reset_index()
+    if continent:
+        df_with_loc_country = df_with_loc_country.loc[df_with_loc_country.Continent == continent, ["Artist", "Country", "Continent"]].reset_index(drop=True)
+    df_counted = df_with_loc_country.groupby("Country")["Artist"].count().to_frame().sort_values("Artist", ascending=False).reset_index()
 
     return df_counted
 
@@ -153,3 +154,33 @@ def plotly_bar_chart(df, color, bars_num):
         marker=dict(color=color)
     )
     return fig
+
+
+def get_total_days_mins(data):
+
+    if 'mins' not in data.columns:
+        data['mins'] = (data['ms_played'] / 60000)
+    total_mins = data['mins'].sum()
+    total_days = round(total_mins / (24 * 60))
+
+    return total_mins, total_days
+
+def get_top_5_artists_simple(data, num = 5):
+
+    top = data.groupby(['master_metadata_album_artist_name']).size().reset_index(name='counts').sort_values(by='counts', ascending=False)
+
+    return top.head(num)
+
+def get_top_5_songs_simple(data, num = 5):
+
+    top = data.groupby(['master_metadata_track_name', 'master_metadata_album_artist_name']).size().reset_index(name='counts').sort_values(by='counts', ascending=False)
+
+    return top.head(num)
+
+
+def get_top_5_albums_simple(data, num=5):
+
+    df = data.groupby(['master_metadata_album_album_name', 'master_metadata_album_artist_name']).size().reset_index(
+        name='counts').sort_values(by='counts', ascending=False)
+
+    return df.head(num)

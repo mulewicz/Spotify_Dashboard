@@ -7,5 +7,3 @@ stop_words
 langdetect
 spotipy
 plotly
-pickle
-toml

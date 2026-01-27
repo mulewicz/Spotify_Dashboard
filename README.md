@@ -1,5 +1,5 @@
 # Spotify_Dashboard
-Aplikacja stworzona do analizy trendów widocznych w naszych gustach muzycznych a również 
+Aplikacja stworzona do analizy trendów widocznych w naszych gustach muzycznych, a również do porównywania naszych nawyków słuchania, odkrywania ulubionych artystów i utworów oraz obserwowania, jak nasz gust muzyczny zmieniał się na przestrzeni lat.
 
 HOME:
 

@@ -1,5 +1,7 @@
 import sys
 import os
+from streamlit_option_menu import option_menu
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from home import *
 from shared import *

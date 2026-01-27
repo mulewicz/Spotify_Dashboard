@@ -1,22 +1,9 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-from streamlit_option_menu import option_menu
+
 import sys
-import lyricsgenius
-from wordcloud import WordCloud, STOPWORDS
 import os
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from streamlit_lottie import st_lottie
-import json
-import time
-import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from utils import *
-import spotipy
-import pickle
 from utils2 import *
 
 def home():

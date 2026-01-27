@@ -1,32 +1,19 @@
-# the code for all plotly figures can be found here
+import random
 from typing import Any
-import pylast
-API_KEY = "5c51f97d7fb28cc1cd24b9bfba88054a"
-API_SECRET = "c17fb9f955fff5a4d4846e3e36931c59"
-from collections import Counter
-import time
-import numpy as np
-import plotly.graph_objects as go
-import plotly
-from plotly.subplots import make_subplots
-import pandas as pd
-import streamlit as st
 import lyricsgenius
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import spotipy
+from langdetect import detect
+from plotly.subplots import make_subplots
+from spotipy.oauth2 import SpotifyClientCredentials
 from stop_words import get_stop_words
 from wordcloud import WordCloud, STOPWORDS
-from langdetect import detect, LangDetectException
-from collections import Counter
-import spotipy
-import pylast
-from collections import Counter
-import time
-from spotipy.oauth2 import SpotifyClientCredentials
-import random
-import plotly.express as px
+
 from utils2 import *
-import matplotlib.pyplot as plt
+
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-GENIUS_ACCESS_TOKEN = "3O6Gergq8PJj06gtdB2sfrFwPdEMCgZzaN1rdjumu8Bwu8GVHZsYYgMzBsxUAxeF"
+GENIUS_ACCESS_TOKEN = secrets["GENIUS_ACCESS_TOKEN"]
 genius = lyricsgenius.Genius(GENIUS_ACCESS_TOKEN)
 
 def get_artist_timeseries(df, artist_name, year, freq="D"):
@@ -267,11 +254,6 @@ def get_artist_image_url(artist_name: str) -> tuple[None, None] | tuple[Any | No
     spotify_url = artist["external_urls"]["spotify"]
     return image_url, spotify_url
 
-def get_the_genre(song, artist):
-    network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET)
-    track = network.get_track(artist, song)
-    top_tags = track.get_top_tags()
-    return top_tags[:5]
 
 def get_total_days(data, year):
     if 'mins' not in data.columns:

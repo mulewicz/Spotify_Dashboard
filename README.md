@@ -1,5 +1,9 @@
 # Spotify_Dashboard
-Aplikacja stworzona do analizy trendów widocznych w naszych gustach muzycznych, a również do porównywania naszych nawyków słuchania, odkrywania ulubionych artystów i utworów oraz obserwowania, jak nasz gust muzyczny zmieniał się na przestrzeni lat. Wideo: https://drive.google.com/drive/folders/17ic0J9h14N_i1OtHj4rZFq0eiEO-OiRs?usp=share_link.
+Aplikacja stworzona do analizy trendów widocznych w naszych gustach muzycznych, a również do porównywania naszych nawyków słuchania, odkrywania ulubionych artystów i utworów oraz obserwowania, jak nasz gust muzyczny zmieniał się na przestrzeni lat. 
+
+Aplikacje znajdziecie tutaj: https://spotify--dashboard.streamlit.app
+
+Wideo: https://drive.google.com/drive/folders/17ic0J9h14N_i1OtHj4rZFq0eiEO-OiRs?usp=share_link.
 
 ### HOME:
 

@@ -1,8 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import *
-from utils2 import *
+from src.core.visualisation_engine import *
 
 def shared():
     st.markdown(

@@ -9,124 +9,38 @@ from plotly.subplots import make_subplots
 from spotipy.oauth2 import SpotifyClientCredentials
 from stop_words import get_stop_words
 from wordcloud import WordCloud, STOPWORDS
+from src.core.config import *
+import streamlit as st
+import pandas as pd
 
-from utils2 import *
-
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-GENIUS_ACCESS_TOKEN = secrets["GENIUS_ACCESS_TOKEN"]
 genius = lyricsgenius.Genius(GENIUS_ACCESS_TOKEN)
 
 def get_artist_timeseries(df, artist_name, year, freq="D"):
     df_year = df[df['ts_date'].dt.year == year].copy()
     df_artist = df_year[df_year['master_metadata_album_artist_name'] == artist_name].copy()
+
     if df_artist.empty:
         return pd.DataFrame(columns=["date", "minutes"])
 
     df_artist = df_artist.set_index('ts_date').resample(freq)['ms_played'].sum().reset_index()
-
     df_artist['minutes'] = df_artist['ms_played'] / 60000
     df_artist['date'] = df_artist['ts_date'].dt.date
 
     return df_artist[['date', 'minutes']]
 
-def render_shared_artist_timeseries(shared_artists, year, data_ola, data_maciek, freq="D"):
-    if shared_artists.empty:
-        return
-
-    st.markdown('<div style="height: 16px;"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown(
-        f"""<div class="big-title">Listening over time in {year}</div>""",
-        unsafe_allow_html=True
-    )
-
-    col_artist, col_who = st.columns([3, 2])
-
-    with col_artist:
-        selected_artist = st.selectbox(
-            "Choose artist from your shared top:",
-            shared_artists['master_metadata_album_artist_name'].tolist(),
-            key=f"shared_artist_select_{year}"
-        )
-
-    with col_who:
-        st.write("Whose listening?")
-        who_cols = st.columns(2)
-        with who_cols[0]:
-            show_ola = st.checkbox("Ola", value=True, key=f"show_ola_{year}")
-        with who_cols[1]:
-            show_maciek = st.checkbox("Maciek", value=True, key=f"show_maciek_{year}")
-
-    ts_ola = get_artist_timeseries(data_ola, selected_artist, year, freq=freq)
-    ts_maciek = get_artist_timeseries(data_maciek, selected_artist, year, freq=freq)
-
-    selected_any = show_ola or show_maciek
-
-    if not selected_any:
-        st.info("Zaznacz przynajmniej jedną osobę, żeby zobaczyć wykres.")
-        return
-
-    if (show_ola and ts_ola.empty) and (show_maciek and ts_maciek.empty):
-        st.info("Brak danych o słuchaniu tego artysty w wybranym roku.")
-        return
-
-    if not ts_ola.empty:
-        ts_ola['minutes_smooth'] = ts_ola['minutes'].rolling(window=7, min_periods=1).mean()
-
-    if not ts_maciek.empty:
-        ts_maciek['minutes_smooth'] = ts_maciek['minutes'].rolling(window=7, min_periods=1).mean()
-    fig = go.Figure()
-
-    if show_ola and not ts_ola.empty:
-        fig.add_trace(
-            go.Scatter(
-                x=ts_ola['date'],
-                y=ts_ola['minutes_smooth'],
-                mode="lines",
-                name="Ola (7-day Trend)",
-                line=dict(
-                    color=colors_ola[3],
-                    width=3,
-                    shape='spline'
-                )
-            )
-        )
-
-    if show_maciek and not ts_maciek.empty:
-        fig.add_trace(
-            go.Scatter(
-                x=ts_maciek['date'],
-                y=ts_maciek['minutes_smooth'],
-                mode="lines",
-                name="Maciek (7-day Trend)",
-                line=dict(
-                    color=colors_maciek[3],
-                    width=3,
-                    shape='spline'
-                )
-            )
-        )
-
-    fig.update_layout(
-        xaxis_title="Date",
-        yaxis_title="Minutes played (7-day Avg)",  # Warto zaznaczyć, że to średnia
-        margin={"l": 40, "r": 20, "t": 20, "b": 40},
-        hovermode="x unified",
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-def artist_in_the_year(data, artist, year):
-    pass
-
 def get_available_years(df):
     df['ts_date'] = pd.to_datetime(df['ts_date'])
     data = df.copy()
+
     activity = data.groupby("ts_date")['ms_played'].sum()
+
     data = activity.reset_index() if isinstance(activity, pd.Series) else activity.copy()
     data['ts_date'] = pd.to_datetime(data['ts_date'])
     data['mins'] = (data['ms_played'] / 60000).round(0)
     available_years = sorted(data['ts_date'].dt.year.unique(), reverse=True)
+
     return available_years
+
 
 def get_lang(lyrics):
         try:
@@ -230,6 +144,7 @@ def generate_2d_cloud(text_content, colors, max_count):
     plt.gca().set_position([0, 0, 1, 1])
 
     return fig
+
 
 def get_artist_image_url(artist_name: str) -> tuple[None, None] | tuple[Any | None, Any, Any]:
     if not artist_name:
@@ -447,3 +362,73 @@ def draw_chart(data, colors, sel_year, view_mode):
     ))
 
     return fig
+
+
+def shared_tab(data_a, data_b, col, sel_year):
+    df_a= data_a[data_a['ts_date'].dt.year == sel_year].copy()
+    df_b = data_b[data_b['ts_date'].dt.year == sel_year].copy()
+    def filter_time(df):
+
+        clean = df.loc[(df['ms_played'] > 30000) & (df[col[0]].notna()), :]
+
+        grouped = clean.groupby(col)['ms_played'].sum().reset_index()
+        grouped['minutes'] = grouped['ms_played'] / 60000
+        return grouped.drop(columns=['ms_played'])
+
+    tab_a = filter_time(df_a).rename(columns={'minutes': 'minutes_a'})
+    tab_b = filter_time(df_b).rename(columns={'minutes': 'minutes_b'})
+
+    shared = tab_a.merge(tab_b, on=col, how='inner')
+
+    shared['shared_time'] = shared[['minutes_a', 'minutes_b']].min(axis=1)
+
+    res_tab = shared.sort_values('shared_time', ascending=False).head(10)
+    return res_tab.round(1)
+
+
+def get_artist_loc(df, aggregate=True):
+    unique_artists = df.drop_duplicates(
+        subset=["master_metadata_album_artist_name"]
+    ).reset_index(drop=True)
+
+    location = pd.read_csv(PATH_LOC_OLA)
+    df_merged = unique_artists.merge(
+        location,
+        how="left",
+        left_on="master_metadata_album_artist_name",
+        right_on="Artist"
+    )
+
+    if 'Location' in df_merged.columns:
+        df_merged['Location'] = df_merged['Location'].fillna('Unknown')
+
+    if aggregate:
+        if 'Location' in df_merged.columns:
+            df_grouped = df_merged.groupby(
+                ["lat", "lon", "Location"]
+            )['Artist'].apply(lambda x: '<br>'.join(x)).reset_index()
+        else:
+            df_grouped = df_merged.groupby(
+                ["lat", "lon"]
+            )['Artist'].apply(lambda x: '<br>'.join(x)).reset_index()
+            df_grouped['Location'] = 'Unknown'
+        return df_grouped
+
+    return df_merged
+
+
+def count_counties(df, continent = None):
+
+    location = pd.read_csv(PATH_LOC_OLA)
+    countries = pd.read_csv(PATH_COUNTRIES)
+    countries["Continent"] = countries["Continent"].replace("Oceania", "Australia/Oceania")
+
+    unique_artists = df.drop_duplicates(subset=["master_metadata_album_artist_name"]).reset_index(drop=True)
+    df_with_loc = unique_artists.merge(location, how="left", left_on="master_metadata_album_artist_name", right_on="Artist")
+    df_with_loc_country = df_with_loc.merge(countries, how="left", left_on="Location", right_on="Country")
+    if continent:
+        df_with_loc_country = df_with_loc_country.loc[df_with_loc_country.Continent == continent, ["Artist", "Country", "Continent"]].reset_index(drop=True)
+    df_counted = df_with_loc_country.groupby("Country")["Artist"].count().to_frame().sort_values("Artist", ascending=False).reset_index()
+
+    return df_counted
+

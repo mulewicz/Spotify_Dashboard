@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils2 import *
+from src.core.visualisation_engine import *
 
 
 def artists_on_the_map():
@@ -47,7 +47,7 @@ def artists_on_the_map():
         color = colors_maciek[3]
 
     st.plotly_chart(
-        plotly_scatter_map(geo_df, mapbox_token, "lat", "lon", continent_cords[sel_continent], color),
+        plotly_scatter_map(geo_df, MAPBOX_TOKEN, "lat", "lon", continent_cords[sel_continent], color),
         use_container_width=True
     )
 
@@ -125,7 +125,7 @@ def artists_on_the_map():
                 raw_df['master_metadata_album_artist_name'].isin(artists_in_country_list)
             ]
         else:
-            st.error("Problem z plikiem artysci_lokalizacje.csv - brak kolumny Location")
+            st.error("Problem z plikiem artist_loc_ola.csv - brak kolumny Location")
 
     col_trend, col_top_art = st.columns((1, 1))
 

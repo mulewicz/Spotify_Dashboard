@@ -3,10 +3,10 @@ import os
 from streamlit_option_menu import option_menu
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from home import *
-from shared import *
-from artists_on_the_map import *
-from wrapped import *
+from src.modules.home import *
+from src.modules.shared import *
+from src.modules.artists_on_the_map import *
+from src.modules.wrapped import *
 
 st.set_page_config(layout="wide")
 st.write("<style>" + open(STYLE_PATH).read() + "</style>", unsafe_allow_html=True)

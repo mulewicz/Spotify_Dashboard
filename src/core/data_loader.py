@@ -41,7 +41,7 @@ def split_datetime_column(dataframe: pd.DataFrame, datetime_column: str) -> None
 
 if __name__ == '__main__':
 
-    json = read_json(path='../../spotify_dashboard/Spotify Extended Streaming History/')
+    json = read_json(path='../../../../spotify_dashboard/Spotify Extended Streaming History/')
     split_datetime_column(dataframe=json, datetime_column='ts')
     json = json.drop(columns=['ip_addr', 'ts'])
     json.to_pickle('data/dane_ola.pkl')

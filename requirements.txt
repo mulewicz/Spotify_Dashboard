@@ -1,0 +1,9 @@
+streamlit
+streamlit-option-menu
+lyricsgenius
+matplotlib
+wordcloud
+stop_words
+langdetect
+spotipy
+plotly

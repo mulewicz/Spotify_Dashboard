@@ -14,7 +14,7 @@ This project started as a tool to explore long-term music trends and discover ov
 
 ## Application Overview
 
-You can find the application running at: https://spotify--dashboard.streamlit.app
+You can find the application running at: https://spotify--stats.streamlit.app
 
 The core of the application is divided into four specialized modules accessible via the sidebar navigation:
 
